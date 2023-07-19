@@ -1,40 +1,22 @@
 const std = @import("std");
+const fs = std.fs;
 const mem = std.mem;
 const meta = std.meta;
 const debug = std.debug;
 const testing = std.testing;
-
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     var allocator = gpa.allocator();
 
-    const stdout = std.io.getStdOut().writer();
-
     var args = std.process.args();
     _ = args.next();
     const command = meta.stringToEnum(Command, args.next().?) orelse return error.InvalidCommand;
-    const url = args.next().?;
-    std.debug.print("URL: {s}\n", .{ url });
-    const origin = try parseURL(url);
-    std.debug.print("origin: {any}\n", .{ origin });
 
     switch (command) {
         .clone => {
-            const home_path = std.os.getenv("HOME") orelse return error.NoHome;
-            const repo_paent_path = try std.fs.path.join(allocator, &.{ home_path, "src", origin.host, origin.user });
-            defer allocator.free(repo_paent_path);
-            const repo_path = try std.fs.path.join(allocator, &.{ repo_paent_path, origin.repo });
-            defer allocator.free(repo_path);
-            try std.fs.cwd().makePath(repo_paent_path);
-            try std.process.changeCurDir(repo_paent_path);
-            var git_clone = std.ChildProcess.init(&.{ "git", "clone", origin.full_path }, allocator);
-            const term = try git_clone.spawnAndWait();
-            if (term.Exited != 0) {
-                return error.CloneFailed;
-            }
-            try stdout.print("{s}\n", .{ repo_path });
+            try cloneUrl(allocator, args.next() orelse return error.MissingURL);
         },
         .cd => {
 
@@ -46,6 +28,46 @@ const Command = enum {
     clone,
     cd,
 };
+
+pub fn cloneUrl(allocator: mem.Allocator, url: []const u8) !void {
+    const log = std.log.scoped(.clone);
+    const stdout = std.io.getStdOut().writer();
+
+    log.debug("url: {s}", .{ url });
+    const origin = try parseURL(url);
+    log.debug("origin: {any}", .{ origin });
+
+    const home_path = std.os.getenv("HOME") orelse return error.NoHome;
+
+    const repo_paent_path = try fs.path.join(allocator, &.{ home_path, "src", origin.host, origin.user });
+    defer allocator.free(repo_paent_path);
+
+    const repo_path = try fs.path.join(allocator, &.{ repo_paent_path, origin.repo });
+    defer allocator.free(repo_path);
+
+    if (try dirExists(repo_path)) {
+        return error.RepoExists;
+    }
+
+    try fs.cwd().makePath(repo_paent_path);
+    try std.process.changeCurDir(repo_paent_path);
+    var git_clone = std.ChildProcess.init(&.{ "git", "clone", origin.full_path }, allocator);
+    const term = try git_clone.spawnAndWait();
+    if (term.Exited != 0) {
+        return error.CloneFailed;
+    }
+    try stdout.print("{s}\n", .{ repo_path });
+}
+
+pub fn dirExists(path: []const u8) !bool {
+    fs.cwd().access(path, .{}) catch |err| {
+        return switch (err) {
+            error.FileNotFound => false,
+            else => err
+        };
+    };
+    return true;
+}
 
 pub fn parseURL(url: []const u8) !Origin {
     if (mem.startsWith(u8, url, "http")) {
