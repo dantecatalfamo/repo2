@@ -12,7 +12,8 @@ pub fn main() !void {
 
     var args = std.process.args();
     _ = args.next();
-    const command = meta.stringToEnum(Command, args.next().?) orelse return error.InvalidCommand;
+    const command_str = args.next() orelse return error.NoCommand;
+    const command = meta.stringToEnum(Command, command_str) orelse return error.InvalidCommand;
 
     switch (command) {
         .clone => {
