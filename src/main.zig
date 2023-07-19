@@ -17,7 +17,8 @@ pub fn main() !void {
 
     switch (command) {
         .clone => {
-            try cloneUrl(allocator, args.next() orelse return error.MissingURL);
+            const url = args.next() orelse return error.MissingURL;
+            try cloneUrl(allocator, url);
         },
         .cd => {
 
