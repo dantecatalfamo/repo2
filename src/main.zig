@@ -5,6 +5,7 @@ const meta = std.meta;
 const debug = std.debug;
 const testing = std.testing;
 const cloneUrl = @import("clone.zig").cloneUrl;
+const repoCd = @import("cd.zig").repoCd;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -18,15 +19,25 @@ pub fn main() !void {
     const command_str = args.next() orelse return error.NoCommand;
     const command = meta.stringToEnum(Command, command_str) orelse return error.InvalidCommand;
 
+    const src_root = blk: {
+        var path: [std.os.PATH_MAX]u8 = undefined;
+        var static_alloc = std.heap.FixedBufferAllocator.init(&path);
+        const home_path = std.os.getenv("HOME") orelse return error.NoHome;
+        break :blk try fs.path.join(static_alloc.allocator(), &.{ home_path, "src" });
+    };
+
     switch (command) {
         .clone => {
             const url = args.next() orelse return error.MissingURL;
-            const repo_path = try cloneUrl(allocator, url);
+            const repo_path = try cloneUrl(allocator, src_root, url);
             defer allocator.free(repo_path);
             try stdout.print("{s}\n", .{ repo_path });
         },
         .cd => {
-
+            const spec = args.next() orelse return error.MissingSpec;
+            const repo_path = try repoCd(allocator, src_root, spec);
+            defer allocator.free(repo_path);
+            try stdout.print("{s}\n", .{ repo_path });
         },
     }
 }

@@ -6,16 +6,14 @@ const debug = std.debug;
 const testing = std.testing;
 const Origin = @import("Origin.zig");
 
-pub fn cloneUrl(allocator: mem.Allocator, url: []const u8) ![]const u8 {
+pub fn cloneUrl(allocator: mem.Allocator, src_root: []const u8, url: []const u8) ![]const u8 {
     const log = std.log.scoped(.clone);
 
     log.debug("url: {s}", .{ url });
     const origin = try parseURL(url);
     log.debug("origin: {any}", .{ origin });
 
-    const home_path = std.os.getenv("HOME") orelse return error.NoHome;
-
-    const repo_paent_path = try fs.path.join(allocator, &.{ home_path, "src", origin.host, origin.user });
+    const repo_paent_path = try fs.path.join(allocator, &.{ src_root, origin.host, origin.user });
     defer allocator.free(repo_paent_path);
 
     const repo_path = try fs.path.join(allocator, &.{ repo_paent_path, origin.repo });
