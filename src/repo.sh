@@ -21,10 +21,11 @@ function repo-clone {
 
     echo "Cloning ${repo}"
     output=$(repo-zig clone $repo)
+    ret=$?
 
-    if [ $? -eq 0 ]; then
+    if [ $ret -eq 0 ]; then
         cd $output
-    elif [ $? -eq 2 ]; then
+    elif [ $ret -eq 2 ]; then
         echo "Project already cloned"
     else
         echo "Error cloning project"
