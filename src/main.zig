@@ -25,7 +25,7 @@ pub fn main() !void {
     var allocator = gpa.allocator();
 
     const stdout = std.io.getStdOut().writer();
-    const stderr = std.io.getStdOut().writer();
+    const stderr = std.io.getStdErr().writer();
 
     var args = std.process.args();
     _ = args.next();
@@ -44,9 +44,16 @@ pub fn main() !void {
 
     switch (command) {
         .clone => {
-            const url = args.next() orelse return error.MissingURL;
+            const url = args.next() orelse {
+                try stderr.print("Repo required\n", .{});
+                std.os.exit(2);
+            };
+            try stderr.print("Cloning {s}\n", .{ url });
             const repo_path = cloneUrl(allocator, src_root, url) catch |err| switch (err) {
-                error.RepoExists => std.os.exit(2),
+                error.RepoExists => {
+                    try stderr.print("Project already cloned\n", .{});
+                    std.os.exit(2);
+                },
                 else => return err,
             };
             defer allocator.free(repo_path);
@@ -54,7 +61,13 @@ pub fn main() !void {
         },
         .cd => {
             const spec = args.next() orelse "";
-            const repo_path = try repoCd(allocator, src_root, spec);
+            const repo_path = repoCd(allocator, src_root, spec) catch |err| switch (err) {
+                error.NoMatch => {
+                    try stderr.print("No matching repositories\n", .{});
+                    std.os.exit(2);
+                },
+                else => return err,
+            };
             defer allocator.free(repo_path);
             try stdout.print("{s}\n", .{ repo_path });
         },

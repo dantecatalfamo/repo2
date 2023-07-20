@@ -7,11 +7,7 @@ const testing = std.testing;
 const Origin = @import("Origin.zig");
 
 pub fn cloneUrl(allocator: mem.Allocator, src_root: []const u8, url: []const u8) ![]const u8 {
-    const log = std.log.scoped(.clone);
-
-    log.debug("url: {s}", .{ url });
     const origin = try parseURL(url);
-    log.debug("origin: {any}", .{ origin });
 
     const repo_paent_path = try fs.path.join(allocator, &.{ src_root, origin.host, origin.user });
     defer allocator.free(repo_paent_path);
