@@ -1,9 +1,6 @@
 function repo {
     case $1 in
-        clone)
-            repo-cd $@
-            ;;
-        cd)
+        clone|cd)
             repo-cd $@
             ;;
         *)
