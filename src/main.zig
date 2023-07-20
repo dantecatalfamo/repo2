@@ -49,13 +49,7 @@ pub fn main() !void {
                 std.os.exit(2);
             };
             try stderr.print("Cloning {s}\n", .{ url });
-            const repo_path = cloneUrl(allocator, src_root, url) catch |err| switch (err) {
-                error.RepoExists => {
-                    try stderr.print("Project already cloned\n", .{});
-                    std.os.exit(2);
-                },
-                else => return err,
-            };
+            const repo_path = try cloneUrl(allocator, src_root, url);
             defer allocator.free(repo_path);
             try stdout.print("{s}\n", .{ repo_path });
         },

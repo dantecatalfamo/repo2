@@ -16,7 +16,7 @@ pub fn cloneUrl(allocator: mem.Allocator, src_root: []const u8, url: []const u8)
     errdefer allocator.free(repo_path);
 
     if (try dirExists(repo_path)) {
-        return error.RepoExists;
+        return repo_path;
     }
 
     try fs.cwd().makePath(repo_paent_path);
