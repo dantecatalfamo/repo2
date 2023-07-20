@@ -1,7 +1,7 @@
 function repo {
     case $1 in
-        cl*)
-            repo-clone $@
+        clone)
+            repo-cd $@
             ;;
         cd)
             repo-cd $@
@@ -12,16 +12,8 @@ function repo {
     esac
 }
 
-function repo-clone {
-    output=$(repo-zig clone ${@:2})
-
-    if [ $? -eq 0 ]; then
-        cd $output
-    fi
-}
-
 function repo-cd {
-    output=$(repo-zig cd ${@:2})
+    output=$(repo-zig $@)
 
     if [ $? -eq 0 ]; then
         cd $output
