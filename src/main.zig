@@ -9,7 +9,7 @@ const repoCd = @import("cd.zig").repoCd;
 const shell_funcs = @embedFile("repo.sh");
 
 const usage_str =
-    \\usage: repo <command> [<args>]
+    \\usage: repo <command> [args]
     \\
     \\Commands:
     \\  cd      Change to a project directory under ~/src
