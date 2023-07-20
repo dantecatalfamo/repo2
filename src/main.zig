@@ -32,7 +32,7 @@ pub fn main() !void {
     const command_str = args.next() orelse return error.NoCommand;
     const command = meta.stringToEnum(Command, command_str) orelse {
         try stderr.print(usage_str, .{});
-        return error.InvalidCommand;
+        std.os.exit(1);
     };
 
     const src_root = blk: {
@@ -53,7 +53,7 @@ pub fn main() !void {
             try stdout.print("{s}\n", .{ repo_path });
         },
         .cd => {
-            const spec = args.next() orelse return error.MissingSpec;
+            const spec = args.next() orelse "";
             const repo_path = try repoCd(allocator, src_root, spec);
             defer allocator.free(repo_path);
             try stdout.print("{s}\n", .{ repo_path });

@@ -7,13 +7,9 @@ function repo {
             repo-cd $@
             ;;
         *)
-            repo-usage
+            repo-zig $@
             ;;
     esac
-}
-
-function repo-usage {
-    repo-zig help
 }
 
 function repo-clone {
