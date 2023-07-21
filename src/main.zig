@@ -40,12 +40,7 @@ pub fn main() !void {
         std.os.exit(1);
     };
 
-    const src_root = blk: {
-        var path: [std.os.PATH_MAX]u8 = undefined;
-        var static_alloc = std.heap.FixedBufferAllocator.init(&path);
-        const home_path = std.os.getenv("HOME") orelse return error.NoHome;
-        break :blk try fs.path.join(static_alloc.allocator(), &.{ home_path, "src" });
-    };
+    const defaults = env.getValues();
 
     switch (command) {
         .clone => {
@@ -54,7 +49,7 @@ pub fn main() !void {
                 std.os.exit(2);
             };
             try stderr.print("Cloning {s}\n", .{ url });
-            const repo_path = cloneUrl(allocator, src_root, url) catch |err| switch (err) {
+            const repo_path = cloneUrl(allocator, defaults.root, url) catch |err| switch (err) {
                 error.CloneFailed => {
                     try stderr.print("Clone failed\n", .{});
                     std.os.exit(2);
@@ -66,7 +61,7 @@ pub fn main() !void {
         },
         .cd => {
             const spec = args.next() orelse "";
-            const repo_path = repoCd(allocator, src_root, spec) catch |err| switch (err) {
+            const repo_path = repoCd(allocator, defaults.root, spec) catch |err| switch (err) {
                 error.NoMatch => {
                     try stderr.print("No matching repositories\n", .{});
                     std.os.exit(2);
@@ -83,7 +78,6 @@ pub fn main() !void {
             try stdout.writeAll(shell_funcs);
         },
         .env => {
-            const defaults = env.getValues();
             inline for (std.meta.fields(env.EnvironmentValues)) |field| {
                 const upper_str = blk: {
                     var buf: [256]u8 = undefined;
