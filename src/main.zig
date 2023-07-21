@@ -89,7 +89,7 @@ pub fn main() !void {
                     var buf: [256]u8 = undefined;
                     break :blk std.ascii.upperString(&buf, field.name);
                 };
-                try stderr.print("REPO_DEFAULT_{s}: {s}\n", .{ upper_str, @field(defaults, field.name) });
+                try stderr.print("REPO_DEFAULT_{s}={s}\n", .{ upper_str, @field(defaults, field.name) });
             }
         }
     }
