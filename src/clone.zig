@@ -6,11 +6,7 @@ const meta = std.meta;
 const debug = std.debug;
 const testing = std.testing;
 const Origin = @import("Origin.zig");
-
-pub const default_host = "github.com";
-pub const default_user = "dantecatalfamo";
-pub const default_ssh = true;
-pub const default_auth_user = "git";
+const env = @import("env.zig");
 
 pub fn cloneUrl(allocator: mem.Allocator, src_root: []const u8, url: []const u8) ![]const u8 {
     var partial_buf: [4096]u8 = undefined;
@@ -57,16 +53,19 @@ pub fn dirExists(path: []const u8) !bool {
 }
 
 pub fn urlFromPartial(buf: []u8, partial: []const u8) ![]const u8 {
+    const defaults = env.getValues();
+    const use_ssh = mem.eql(u8, defaults.use_ssh, "true");
+
     if (mem.indexOf(u8, partial, "/")) |_| {
-        if (default_ssh) {
-            return try fmt.bufPrint(buf, "{s}@{s}:{s}", .{ default_auth_user, default_host, partial });
+        if (use_ssh) {
+            return try fmt.bufPrint(buf, "{s}@{s}:{s}", .{ defaults.auth_user, defaults.host, partial });
         }
-        return try fmt.bufPrint(buf, "https://{s}/{s}", .{ default_host, partial });
+        return try fmt.bufPrint(buf, "https://{s}/{s}", .{ defaults.host, partial });
     }
-    if (default_ssh) {
-        return try fmt.bufPrint(buf, "{s}@{s}:{s}/{s}", .{ default_auth_user, default_host, default_user, partial });
+    if (use_ssh) {
+        return try fmt.bufPrint(buf, "{s}@{s}:{s}/{s}", .{ defaults.auth_user, defaults.host, defaults.user, partial });
     }
-    return try fmt.bufPrint(buf, "https://{s}/{s}/{s}", .{ default_host, default_user, partial });
+    return try fmt.bufPrint(buf, "https://{s}/{s}/{s}", .{ defaults.host, defaults.user, partial });
 }
 
 pub fn parseURL(url: []const u8) !Origin {

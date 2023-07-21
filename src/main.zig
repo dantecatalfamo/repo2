@@ -7,6 +7,7 @@ const testing = std.testing;
 const cloneUrl = @import("clone.zig").cloneUrl;
 const repoCd = @import("cd.zig").repoCd;
 const shell_funcs = @embedFile("repo.sh");
+const env = @import("env.zig");
 
 const usage_str =
     \\usage: repo <command> [args]
@@ -16,6 +17,7 @@ const usage_str =
     \\  clone   Clone a repository into ~/src according to the site, user, and project
     \\  help    Display this help information
     \\  shell   Print shell helper functions for eval
+    \\  env     Print the current default environment values
     \\
 ;
 
@@ -80,6 +82,16 @@ pub fn main() !void {
         .shell => {
             try stdout.writeAll(shell_funcs);
         },
+        .env => {
+            const defaults = env.getValues();
+            inline for (std.meta.fields(env.EnvironmentValues)) |field| {
+                const upper_str = blk: {
+                    var buf: [1024]u8 = undefined;
+                    break :blk std.ascii.upperString(&buf, field.name);
+                };
+                try stderr.print("REPO_DEFAULT_{s}: {s}\n", .{ upper_str, @field(defaults, field.name) });
+            }
+        }
     }
 }
 
@@ -88,4 +100,5 @@ const Command = enum {
     cd,
     help,
     shell,
+    env,
 };
