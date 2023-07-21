@@ -29,7 +29,10 @@ pub fn main() !void {
 
     var args = std.process.args();
     _ = args.next();
-    const command_str = args.next() orelse return error.NoCommand;
+    const command_str = args.next() orelse {
+        try stderr.print(usage_str, .{});
+        std.os.exit(1);
+    };
     const command = meta.stringToEnum(Command, command_str) orelse {
         try stderr.print(usage_str, .{});
         std.os.exit(1);
