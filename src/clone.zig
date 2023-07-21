@@ -1,13 +1,28 @@
 const std = @import("std");
 const fs = std.fs;
+const fmt = std.fmt;
 const mem = std.mem;
 const meta = std.meta;
 const debug = std.debug;
 const testing = std.testing;
 const Origin = @import("Origin.zig");
 
+pub const default_host = "github.com";
+pub const default_user = "dantecatalfamo";
+pub const default_ssh = true;
+pub const default_auth_user = "git";
+
 pub fn cloneUrl(allocator: mem.Allocator, src_root: []const u8, url: []const u8) ![]const u8 {
-    const origin = try parseURL(url);
+    var partial_buf: [4096]u8 = undefined;
+
+    const full_url = blk: {
+        if (mem.startsWith(u8, url, "http") or mem.indexOf(u8, url, ":") != null) {
+            break :blk url;
+        }
+        break :blk try urlFromPartial(&partial_buf, url);
+    };
+
+    const origin = try parseURL(full_url);
 
     const repo_paent_path = try fs.path.join(allocator, &.{ src_root, origin.host, origin.user });
     defer allocator.free(repo_paent_path);
@@ -41,49 +56,25 @@ pub fn dirExists(path: []const u8) !bool {
     return true;
 }
 
+pub fn urlFromPartial(buf: []u8, partial: []const u8) ![]const u8 {
+    if (mem.indexOf(u8, partial, "/")) |_| {
+        if (default_ssh) {
+            return try fmt.bufPrint(buf, "{s}@{s}:{s}", .{ default_auth_user, default_host, partial });
+        }
+        return try fmt.bufPrint(buf, "https://{s}/{s}", .{ default_host, partial });
+    }
+    if (default_ssh) {
+        return try fmt.bufPrint(buf, "{s}@{s}:{s}/{s}", .{ default_auth_user, default_host, default_user, partial });
+    }
+    return try fmt.bufPrint(buf, "https://{s}/{s}/{s}", .{ default_host, default_user, partial });
+}
+
 pub fn parseURL(url: []const u8) !Origin {
+    // TODO git:// URLs
     if (mem.startsWith(u8, url, "http")) {
         return try parseHttpUrl(url);
     }
-    // TODO git:// URLs
     return try parseSshUrl(url);
-}
-
-test "http url parse" {
-    const url = "https://github.com/dantecatalfamo/repo2";
-    const origin = try parseURL(url);
-
-    const expected = Origin{
-        .full_path = "https://github.com/dantecatalfamo/repo2",
-        .host = "github.com",
-        .user = "dantecatalfamo",
-        .repo = "repo2",
-        .transport = Origin.Transport.https,
-        .branch = null,
-        .port = null,
-        .auth_user = null,
-        .auth_pass = null,
-    };
-    try testing.expectEqualDeep(expected, origin);
-}
-
-test "ssh url parse" {
-    const url = "git@github.com:dantecatalfamo/repo2.git";
-    const origin = try parseURL(url);
-
-    const expected = Origin{
-        .full_path = "git@github.com:dantecatalfamo/repo2.git",
-        .host = "github.com",
-        .user = "dantecatalfamo",
-        .repo = "repo2",
-        .transport = Origin.Transport.ssh,
-        .branch = null,
-        .port = null,
-        .auth_user = "git",
-        .auth_pass = null,
-    };
-    try testing.expectEqualDeep(expected, origin);
-
 }
 
 pub fn parseHttpUrl(url: []const u8) !Origin {
@@ -149,4 +140,41 @@ pub fn parseSshUrl(url: []const u8) !Origin {
         .auth_user = auth_user,
         .auth_pass = null,
     };
+}
+
+test "http url parse" {
+    const url = "https://github.com/dantecatalfamo/repo2";
+    const origin = try parseURL(url);
+
+    const expected = Origin{
+        .full_path = "https://github.com/dantecatalfamo/repo2",
+        .host = "github.com",
+        .user = "dantecatalfamo",
+        .repo = "repo2",
+        .transport = Origin.Transport.https,
+        .branch = null,
+        .port = null,
+        .auth_user = null,
+        .auth_pass = null,
+    };
+    try testing.expectEqualDeep(expected, origin);
+}
+
+test "ssh url parse" {
+    const url = "git@github.com:dantecatalfamo/repo2.git";
+    const origin = try parseURL(url);
+
+    const expected = Origin{
+        .full_path = "git@github.com:dantecatalfamo/repo2.git",
+        .host = "github.com",
+        .user = "dantecatalfamo",
+        .repo = "repo2",
+        .transport = Origin.Transport.ssh,
+        .branch = null,
+        .port = null,
+        .auth_user = "git",
+        .auth_pass = null,
+    };
+    try testing.expectEqualDeep(expected, origin);
+
 }
