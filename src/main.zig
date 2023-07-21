@@ -86,7 +86,7 @@ pub fn main() !void {
             const defaults = env.getValues();
             inline for (std.meta.fields(env.EnvironmentValues)) |field| {
                 const upper_str = blk: {
-                    var buf: [1024]u8 = undefined;
+                    var buf: [256]u8 = undefined;
                     break :blk std.ascii.upperString(&buf, field.name);
                 };
                 try stderr.print("REPO_DEFAULT_{s}: {s}\n", .{ upper_str, @field(defaults, field.name) });
