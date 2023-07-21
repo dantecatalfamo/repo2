@@ -29,4 +29,5 @@ Commands:
   clone   Clone a repository into ~/src according to the site, user, and project
   help    Display this help information
   shell   Print shell helper functions for eval
+  env     Print the current default environment values
 ```
