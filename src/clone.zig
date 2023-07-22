@@ -31,9 +31,8 @@ pub fn cloneUrl(allocator: mem.Allocator, src_root: []const u8, url: []const u8)
     }
 
     try fs.cwd().makePath(repo_paent_path);
-    try std.process.changeCurDir(repo_paent_path);
 
-    var git_clone = std.ChildProcess.init(&.{ "git", "clone", origin.full_path }, allocator);
+    var git_clone = std.ChildProcess.init(&.{ "git", "-C", repo_paent_path, "clone", origin.full_path }, allocator);
     const term = try git_clone.spawnAndWait();
     if (term.Exited != 0) {
         return error.CloneFailed;
