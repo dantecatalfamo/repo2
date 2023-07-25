@@ -5,7 +5,8 @@ const meta = std.meta;
 const debug = std.debug;
 const testing = std.testing;
 const cloneUrl = @import("clone.zig").cloneUrl;
-const repoCd = @import("cd.zig").repoCd;
+const cd = @import("cd.zig");
+const repoCd = cd.repoCd;
 const shell_funcs = @embedFile("repo.sh");
 const env = @import("env.zig");
 
@@ -18,6 +19,7 @@ const usage_str =
     \\  help    Display this help information
     \\  shell   Print shell helper functions for eval
     \\  env     Print the current default environment values
+    \\  ls      List all repo directories
     \\
 ;
 
@@ -60,7 +62,10 @@ pub fn main() !void {
             try stdout.print("{s}\n", .{ repo_path });
         },
         .cd => {
-            const spec = args.next() orelse "";
+            const spec = args.next() orelse {
+                try stdout.print("{s}\n", .{ defaults.root });
+                return;
+            };
             const repo_path = repoCd(allocator, defaults.root, spec) catch |err| switch (err) {
                 error.NoMatch => {
                     try stderr.print("No matching repositories\n", .{});
@@ -85,7 +90,14 @@ pub fn main() !void {
                 };
                 try stderr.print("REPO_DEFAULT_{s}={s}\n", .{ upper_str, @field(defaults, field.name) });
             }
-        }
+        },
+        .ls => {
+            const dirs = try cd.collectDirs(allocator, defaults.root, 2);
+            defer cd.freeCollectDirs(allocator, dirs);
+            for (dirs) |dir| {
+                try stdout.print("{s}\n", .{ dir[defaults.root.len+1..] });
+            }
+        },
     }
 }
 
@@ -95,4 +107,5 @@ const Command = enum {
     help,
     shell,
     env,
+    ls,
 };
