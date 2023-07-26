@@ -147,8 +147,8 @@ pub fn cloneUrlUsage(writer: anytype) !void {
         \\Missing infirmation is filled using environment variables
         \\See `repo env` for details
         \\Where spec can be:
-        \\  <auth_user>@<host>:<user>/<repo>
         \\  https://<host>/<user>/<repo>
+        \\  <auth_user>@<host>:<user>/<repo>
         \\  <user>/<repo>
         \\  <repo>
         \\
