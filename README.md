@@ -30,4 +30,6 @@ Commands:
   help    Display this help information
   shell   Print shell helper functions for eval
   env     Print the current default environment values
+  ls      List all repo directories
+  new     Create a new project directory from a template
 ```
