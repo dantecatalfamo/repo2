@@ -9,6 +9,9 @@ const cd = @import("cd.zig");
 const repoCd = cd.repoCd;
 const shell_funcs = @embedFile("repo.sh");
 const env = @import("env.zig");
+const new = @import("new.zig");
+const newRepo = new.newRepo;
+const RepoType = new.RepoType;
 
 const usage_str =
     \\usage: repo <command> [args]
@@ -20,6 +23,7 @@ const usage_str =
     \\  shell   Print shell helper functions for eval
     \\  env     Print the current default environment values
     \\  ls      List all repo directories
+    \\  new     Create a new project directory from a template
     \\
 ;
 
@@ -98,6 +102,30 @@ pub fn main() !void {
                 try stdout.print("{s}\n", .{ dir[defaults.root.len+1..] });
             }
         },
+        .new => {
+            const repo_type = blk: {
+                const type_str = args.next() orelse {
+                    try stderr.print("No repo type specified\n", .{});
+                    std.os.exit(2);
+                };
+                break :blk std.meta.stringToEnum(RepoType, type_str) orelse {
+                    try stderr.print("Invalid repo type\n", .{});
+                    try stderr.print("Valid repo types:\n", .{});
+                    inline for (std.meta.fields(RepoType)) |field| {
+                        try stderr.print("  {s}\n", .{ field.name });
+                    }
+                    std.os.exit(2);
+                };
+            };
+            const repo_name = args.next() orelse {
+                try stderr.print("No repo name specified\n", .{});
+                std.os.exit(2);
+            };
+            const repo_path = try newRepo(allocator, defaults.root, repo_type, repo_name);
+            defer allocator.free(repo_path);
+
+            try stdout.print("{s}\n", .{ repo_path });
+        }
     }
 }
 
@@ -108,4 +136,5 @@ const Command = enum {
     shell,
     env,
     ls,
+    new,
 };
