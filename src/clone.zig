@@ -140,6 +140,22 @@ pub fn parseSshUrl(url: []const u8) !Origin {
     };
 }
 
+pub fn cloneUrlUsage(writer: anytype) !void {
+    const usage =
+        \\Usage: repo clone <spec>
+        \\
+        \\Missing infirmation is filled using environment variables
+        \\See `repo env` for details
+        \\Where spec can be:
+        \\  <auth_user>@<host>:<user>/<repo>
+        \\  https://<host>/<user>/<repo>
+        \\  <user>/<repo>
+        \\  <repo>
+        \\
+    ;
+    try writer.print(usage, .{});
+}
+
 test "http url parse" {
     const url = "https://github.com/dantecatalfamo/repo2";
     const origin = try parseURL(url);
@@ -174,5 +190,4 @@ test "ssh url parse" {
         .auth_pass = null,
     };
     try testing.expectEqualDeep(expected, origin);
-
 }

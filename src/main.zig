@@ -4,17 +4,14 @@ const mem = std.mem;
 const meta = std.meta;
 const debug = std.debug;
 const testing = std.testing;
-const cloneUrl = @import("clone.zig").cloneUrl;
+const clone = @import("clone.zig");
 const cd = @import("cd.zig");
-const repoCd = cd.repoCd;
 const shell_funcs = @embedFile("repo.sh");
 const env = @import("env.zig");
 const new = @import("new.zig");
-const newRepo = new.newRepo;
-const RepoType = new.RepoType;
 
 const usage_str =
-    \\usage: repo <command> [args]
+    \\Usage: repo <command> [args]
     \\
     \\Commands:
     \\  cd      Change to a project directory under ~/src
@@ -51,11 +48,11 @@ pub fn main() !void {
     switch (command) {
         .clone => {
             const url = args.next() orelse {
-                try stderr.print("Repo required\n", .{});
+                try clone.cloneUrlUsage(stderr);
                 std.os.exit(2);
             };
             try stderr.print("Cloning {s}\n", .{ url });
-            const repo_path = cloneUrl(allocator, defaults.root, url) catch |err| switch (err) {
+            const repo_path = clone.cloneUrl(allocator, defaults.root, url) catch |err| switch (err) {
                 error.CloneFailed => {
                     try stderr.print("Clone failed\n", .{});
                     std.os.exit(2);
@@ -70,7 +67,7 @@ pub fn main() !void {
                 try stdout.print("{s}\n", .{ defaults.root });
                 return;
             };
-            const repo_path = repoCd(allocator, defaults.root, spec) catch |err| switch (err) {
+            const repo_path = cd.repoCd(allocator, defaults.root, spec) catch |err| switch (err) {
                 error.NoMatch => {
                     try stderr.print("No matching repositories\n", .{});
                     std.os.exit(2);
@@ -104,24 +101,17 @@ pub fn main() !void {
         },
         .new => {
             const repo_type = blk: {
-                const type_str = args.next() orelse {
-                    try stderr.print("No repo type specified\n", .{});
-                    std.os.exit(2);
-                };
-                break :blk std.meta.stringToEnum(RepoType, type_str) orelse {
-                    try stderr.print("Invalid repo type\n", .{});
-                    try stderr.print("Valid repo types:\n", .{});
-                    inline for (std.meta.fields(RepoType)) |field| {
-                        try stderr.print("  {s}\n", .{ field.name });
-                    }
+                const type_str = args.next() orelse "";
+                break :blk std.meta.stringToEnum(new.RepoType, type_str) orelse {
+                    try new.newRepoUsage(stderr);
                     std.os.exit(2);
                 };
             };
             const repo_name = args.next() orelse {
-                try stderr.print("No repo name specified\n", .{});
+                try new.newRepoUsage(stderr);
                 std.os.exit(2);
             };
-            const repo_path = try newRepo(allocator, defaults.root, repo_type, repo_name);
+            const repo_path = try new.newRepo(allocator, defaults.root, repo_type, repo_name);
             defer allocator.free(repo_path);
 
             try stdout.print("{s}\n", .{ repo_path });

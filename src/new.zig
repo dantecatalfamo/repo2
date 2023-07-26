@@ -45,6 +45,14 @@ pub fn newRepo(allocator: mem.Allocator, src_root: []const u8, repo_type: RepoTy
     return repo_path;
 }
 
+pub fn newRepoUsage(writer: anytype) !void {
+    try writer.print("Usage: repo new <type> <name>\n\n", .{});
+    try writer.print("Valid repo types:\n", .{});
+    inline for (std.meta.fields(RepoType)) |field| {
+        try writer.print("  {s}\n", .{ field.name });
+    }
+}
+
 pub const RepoType = enum {
     zig_exe,
     zig_lib,
