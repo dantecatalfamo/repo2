@@ -24,6 +24,7 @@ const usage_str =
     \\  ls      List all repo directories
     \\  new     Create a new project directory from a template
     \\  root    Change directory to the project root
+    \\  reload  Reload and re-evaluate shell functions
     \\
 ;
 

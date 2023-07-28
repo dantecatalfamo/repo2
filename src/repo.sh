@@ -3,6 +3,9 @@ function repo {
         clone|cd|new|root)
             repo-cd $@
             ;;
+        reload)
+            repo-reload
+            ;;
         *)
             repo-zig $@
             ;;
@@ -18,4 +21,8 @@ function repo-cd {
     else
         return $ret
     fi
+}
+
+function repo-reload {
+    eval "$(repo-zig shell)"
 }
