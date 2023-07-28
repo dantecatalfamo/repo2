@@ -2,6 +2,7 @@ const std = @import("std");
 const fs = std.fs;
 const mem = std.mem;
 const meta = std.meta;
+const os = std.os;
 const debug = std.debug;
 const testing = std.testing;
 const clone = @import("clone.zig");
@@ -9,6 +10,7 @@ const cd = @import("cd.zig");
 const shell_funcs = @embedFile("repo.sh");
 const env = @import("env.zig");
 const new = @import("new.zig");
+const root = @import("root.zig");
 
 const usage_str =
     \\Usage: repo <command> [args]
@@ -21,6 +23,7 @@ const usage_str =
     \\  env     Print the current default environment values
     \\  ls      List all repo directories
     \\  new     Create a new project directory from a template
+    \\  root    Change directory to the project root
     \\
 ;
 
@@ -115,7 +118,15 @@ pub fn main() !void {
             defer allocator.free(repo_path);
 
             try stdout.print("{s}\n", .{ repo_path });
-        }
+        },
+        .root => {
+            var path_buffer: [os.PATH_MAX]u8 = undefined;
+            const path = root.findRepoRoot(&path_buffer) catch {
+                try stderr.print("Cannot find project root\n", .{});
+                os.exit(2);
+            };
+            try stdout.print("{s}\n", .{ path });
+        },
     }
 }
 
@@ -127,4 +138,5 @@ const Command = enum {
     env,
     ls,
     new,
+    root,
 };
