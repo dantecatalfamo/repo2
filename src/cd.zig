@@ -82,7 +82,7 @@ fn collectDirsImpl(allocator: mem.Allocator, parent: []const u8, depth: u8, coll
     defer dir.close();
     var iter = dir.iterate();
     while(try iter.next()) |entry| {
-        if (entry.kind != .directory)
+        if (entry.kind != .directory and entry.kind != .sym_link)
             continue;
 
         const child_path = blk: {

@@ -13,11 +13,11 @@ function repo {
 }
 
 function repo-cd {
-    output=$(repo-zig $@)
+    output="$(repo-zig $@)"
     ret=$?
 
     if [ $ret -eq 0 ]; then
-        cd $output
+        cd "$output"
     else
         return $ret
     fi
