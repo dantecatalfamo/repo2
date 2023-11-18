@@ -42,9 +42,7 @@ function _repo_completions {
         else
             COMPREPLY=($(repo cd && compgen -d "${COMP_WORDS[2]}"))
         fi
-
-    else
-        echo "NOT IT ${COMP_WORDS[1]}"
+        return;
     fi
 }
 
