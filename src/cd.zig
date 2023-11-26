@@ -60,7 +60,7 @@ fn getSelection(max: usize) !usize {
 pub fn collectDirs(allocator: mem.Allocator, parent: []const u8, depth: u8) ![][]const u8 {
     var collector = std.ArrayList([]const u8).init(allocator);
     try collectDirsImpl(allocator, parent, depth, &collector);
-    var collected = try collector.toOwnedSlice();
+    const collected = try collector.toOwnedSlice();
     mem.sort([]const u8, collected, {}, strLessThan);
     return collected;
 }
@@ -78,7 +78,7 @@ pub fn freeCollectDirs(allocator: mem.Allocator, dirs: [][]const u8) void {
 }
 
 fn collectDirsImpl(allocator: mem.Allocator, parent: []const u8, depth: u8, collector: *std.ArrayList([]const u8)) !void {
-    var dir = try fs.cwd().openIterableDir(parent, .{});
+    var dir = try fs.cwd().openDir(parent, .{ .iterate = true });
     defer dir.close();
     var iter = dir.iterate();
     while(try iter.next()) |entry| {

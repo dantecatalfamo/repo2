@@ -25,7 +25,7 @@ pub fn findRepoRoot(buffer: []u8) ![]u8 {
                         return error.NoGitRepo;
                     }
 
-                    var new_dir = try dir.openDir("..", .{});
+                    const new_dir = try dir.openDir("..", .{});
                     // Can't close fs.cwd() or we get BADF
                     if (dir.fd != fs.cwd().fd) {
                         dir.close();
@@ -42,7 +42,7 @@ pub fn findRepoRoot(buffer: []u8) ![]u8 {
             dir.close();
         }
 
-        var out_path = buffer[0..absolute_path.len];
+        const out_path = buffer[0..absolute_path.len];
         @memcpy(out_path, absolute_path);
 
         return out_path;
