@@ -9,6 +9,7 @@ const build = @import("build.zig");
 const clone = @import("clone.zig");
 const cd = @import("cd.zig");
 const identify = @import("identify.zig");
+const link = @import("link.zig");
 const shell_funcs = @embedFile("repo.sh");
 const env = @import("env.zig");
 const new = @import("new.zig");
@@ -24,6 +25,7 @@ const usage_str =
     \\  help    Display this help information
     \\  shell   Print shell helper functions for eval
     \\  env     Print the current default environment values
+    \\  link    Link the build artifacts into the user's bin directory
     \\  ls      List all repo directories
     \\  new     Create a new project directory from a template
     \\  root    Change directory to the project root
@@ -112,6 +114,11 @@ pub fn main() !void {
                 try stderr.print("REPO_DEFAULT_{s}={s}\n", .{ upper_str, @field(defaults, field.name) });
             }
         },
+        .link => {
+            try root.cdRepoRoot();
+            const project_type = try identify.identifyProjectType();
+            try link.link(project_type);
+        },
         .ls => {
             const dirs = try cd.collectDirs(allocator, defaults.root, 2);
             defer cd.freeCollectDirs(allocator, dirs);
@@ -154,6 +161,7 @@ const Command = enum {
     help,
     shell,
     env,
+    link,
     ls,
     new,
     root,
