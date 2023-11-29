@@ -5,8 +5,10 @@ const meta = std.meta;
 const os = std.os;
 const debug = std.debug;
 const testing = std.testing;
+const build = @import("build.zig");
 const clone = @import("clone.zig");
 const cd = @import("cd.zig");
+const identify = @import("identify.zig");
 const shell_funcs = @embedFile("repo.sh");
 const env = @import("env.zig");
 const new = @import("new.zig");
@@ -50,6 +52,19 @@ pub fn main() !void {
     const defaults = env.getValues();
 
     switch (command) {
+        .build => {
+            const optimize = blk: {
+                const opt = args.next() orelse break :blk build.Optimize.debug;
+                if (mem.startsWith(u8, opt, "r")) {
+                    break :blk build.Optimize.release;
+                }
+                break :blk build.Optimize.debug;
+            };
+            try root.cdRepoRoot();
+            const project_type = try identify.identifyProjectType();
+            try stderr.print("Building {s} in {s} mode\n", .{ @tagName(project_type), @tagName(optimize) });
+            try build.build(allocator, project_type, optimize);
+        },
         .clone => {
             const url = args.next() orelse {
                 try clone.cloneUrlUsage(stderr);
@@ -132,6 +147,7 @@ pub fn main() !void {
 }
 
 const Command = enum {
+    build,
     clone,
     cd,
     help,
