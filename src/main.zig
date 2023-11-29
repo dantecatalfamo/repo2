@@ -18,6 +18,7 @@ const usage_str =
     \\Usage: repo <command> [args]
     \\
     \\Commands:
+    \\  build   Build project
     \\  cd      Change to a project directory under ~/src
     \\  clone   Clone a repository into ~/src according to the site, user, and project
     \\  help    Display this help information
