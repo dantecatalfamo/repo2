@@ -117,7 +117,7 @@ pub fn main() !void {
         .link => {
             try root.cdRepoRoot();
             const project_type = try identify.identifyProjectType();
-            try link.link(project_type);
+            try link.link(allocator, project_type, stdout);
         },
         .ls => {
             const dirs = try cd.collectDirs(allocator, defaults.root, 2);
