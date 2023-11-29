@@ -26,6 +26,16 @@ pub fn newRepo(allocator: mem.Allocator, src_root: []const u8, repo_type: RepoTy
 
     switch (repo_type) {
         .none => {},
+        .rails => {
+            // FIXME There should be a way to redirect a child
+            // process' stdout to stderr in zig without resorting to a
+            // shell process, but I don't know what it is right now
+            var child_rails = std.ChildProcess.init(&.{ "sh", "-c", "rails new . 1>&2" }, allocator);
+            const term_rails = try child_rails.spawnAndWait();
+            if (term_rails.Exited != 0) {
+                return error.RailsInit;
+            }
+        },
         .zig_exe => {
             var child_zig = std.ChildProcess.init(&.{ "zig", "init-exe" }, allocator);
             const term_zig = try child_zig.spawnAndWait();
@@ -54,6 +64,7 @@ pub fn newRepoUsage(writer: anytype) !void {
 }
 
 pub const RepoType = enum {
+    rails,
     zig_exe,
     zig_lib,
     none
