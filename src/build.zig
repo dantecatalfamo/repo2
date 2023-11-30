@@ -21,11 +21,11 @@ pub fn build(allocator: mem.Allocator, project_type: identify.ProjectType, optim
             }
         },
         .rust => {
-            const optimize_arg = switch (optimize) {
-                .debug => "",
-                .release => "-r",
+            const args = switch (optimize) {
+                .debug => &[_][]const u8{ "cargo", "build" },
+                .release => &[_][]const u8{ "cargo", "build", "-r" },
             };
-            var child = std.ChildProcess.init(&.{ "cargo", "build", optimize_arg }, allocator);
+            var child = std.ChildProcess.init(args, allocator);
             const exit = try child.spawnAndWait();
             if (exit.Exited != 0) {
                 return error.BuildFailed;
