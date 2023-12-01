@@ -6,10 +6,10 @@ const os = std.os;
 const process = std.process;
 const testing = std.testing;
 
-const getValues = @import("env.zig").getValues;
+const env = @import("env.zig");
 
 pub fn newRepo(allocator: mem.Allocator, src_root: []const u8, repo_type: RepoType, repo_name: []const u8) ![]const u8 {
-    const defaults = getValues();
+    const defaults = try env.get();
     const repo_path = try fs.path.join(allocator, &.{ src_root, defaults.host, defaults.user, repo_name });
     errdefer allocator.free(repo_path);
 

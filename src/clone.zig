@@ -52,7 +52,7 @@ pub fn dirExists(path: []const u8) !bool {
 }
 
 pub fn urlFromPartial(buf: []u8, partial: []const u8) ![]const u8 {
-    const defaults = env.getValues();
+    const defaults = try env.get();
     const use_ssh = mem.eql(u8, defaults.use_ssh, "true");
 
     if (mem.indexOf(u8, partial, "/")) |_| {

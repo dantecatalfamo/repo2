@@ -13,35 +13,34 @@ pub const EnvironmentValues = struct {
     bin: []const u8,
 };
 
-pub fn getValues() EnvironmentValues {
-    const root = struct {
-        var buf: [std.os.PATH_MAX]u8 = undefined;
-        var path: []const u8 = "";
-    };
+var environment: ?EnvironmentValues = null;
 
-    const bin = struct {
-        var buf: [std.os.PATH_MAX]u8 = undefined;
-        var path: []const u8 = "";
-    };
-
+pub fn init(allocator: mem.Allocator) !void {
     const home_path = std.os.getenv("HOME") orelse "";
-
-    root.path = blk: {
-        var static_alloc = std.heap.FixedBufferAllocator.init(&root.buf);
-        break :blk fs.path.join(static_alloc.allocator(), &.{ home_path, "src" }) catch unreachable;
-    };
-
-    bin.path = blk: {
-        var static_alloc = std.heap.FixedBufferAllocator.init(&bin.buf);
-        break :blk fs.path.join(static_alloc.allocator(), &.{ home_path, "bin" }) catch unreachable;
-    };
-
-    return .{
+    const root = try fs.path.join(allocator, &.{ home_path, "src" });
+    errdefer allocator.free(root);
+    const bin = try fs.path.join(allocator, &.{ home_path, "bin" });
+    errdefer allocator.free(bin);
+    environment = .{
         .host = std.os.getenv("REPO_DEFAULT_HOST") orelse "github.com",
         .user = std.os.getenv("REPO_DEFAULT_USER") orelse "dantecatalfamo",
         .auth_user = std.os.getenv("REPO_DEFAULT_AUTH_USER") orelse "git",
         .use_ssh = std.os.getenv("REPO_DEFAULT_USE_SSH") orelse "true",
-        .root = std.os.getenv("REPO_DEFAULT_ROOT") orelse root.path,
-        .bin = std.os.getenv("REPO_DEFAULT_BIN") orelse bin.path,
+        .root = std.os.getenv("REPO_DEFAULT_ROOT") orelse root,
+        .bin = std.os.getenv("REPO_DEFAULT_BIN") orelse bin,
     };
+}
+
+pub fn deinit(allocator: mem.Allocator) void {
+    if (environment) |env| {
+        allocator.free(env.root);
+        allocator.free(env.bin);
+    }
+    environment = null;
+}
+
+pub fn get() !EnvironmentValues {
+    if (environment) |env|
+        return env;
+    return error.EnvironmentNotInitialized;
 }

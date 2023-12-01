@@ -52,7 +52,9 @@ pub fn main() !void {
         std.os.exit(1);
     };
 
-    const defaults = env.getValues();
+    try env.init(allocator);
+    defer env.deinit(allocator);
+    const defaults = try env.get();
 
     switch (command) {
         .build => {

@@ -10,7 +10,7 @@ const env = @import("env.zig");
 
 pub fn link(allocator: mem.Allocator, project_type: identify.ProjectType, message_writer: anytype) !void {
 
-    const defaults = env.getValues();
+    const defaults = try env.get();
 
     switch (project_type) {
         .zig => {
