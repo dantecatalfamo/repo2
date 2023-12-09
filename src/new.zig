@@ -26,6 +26,18 @@ pub fn newRepo(allocator: mem.Allocator, src_root: []const u8, repo_type: RepoTy
 
     switch (repo_type) {
         .none => {},
+        .go => {
+            // FIXME This will cause issues on Windows, since go
+            // modules always use forward slashes
+            const module_name = try fs.path.join(allocator, &.{ defaults.host, defaults.user, repo_name });
+            defer allocator.free(module_name);
+
+            var child_proc = std.ChildProcess.init(&.{ "go", "mod", "init", module_name }, allocator);
+            const term_proc = try child_proc.spawnAndWait();
+            if (term_proc.Exited != 0) {
+                return error.NewRepoChildProcess;
+            }
+        },
         .rails => {
             // FIXME There should be a way to redirect a child
             // process' stdout to stderr in zig without resorting to a
@@ -64,6 +76,7 @@ pub fn newRepoUsage(writer: anytype) !void {
 }
 
 pub const RepoType = enum {
+    go,
     rails,
     zig_exe,
     zig_lib,
