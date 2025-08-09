@@ -6,13 +6,13 @@ const os = std.os;
 const testing = std.testing;
 
 pub fn cdRepoRoot() !void {
-    var path_buffer: [fs.MAX_PATH_BYTES]u8 = undefined;
+    var path_buffer: [fs.max_path_bytes]u8 = undefined;
     const path = try findRepoRoot(&path_buffer);
-    try os.chdir(path);
+    try std.posix.chdir(path);
 }
 
 pub fn findRepoRoot(buffer: []u8) ![]u8 {
-    var path_buffer: [fs.MAX_PATH_BYTES]u8 = undefined;
+    var path_buffer: [fs.max_path_bytes]u8 = undefined;
     var dir = fs.cwd();
 
     while (true) {

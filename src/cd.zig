@@ -86,7 +86,7 @@ fn collectDirsImpl(allocator: mem.Allocator, parent: []const u8, depth: u8, coll
             continue;
 
         const child_path = blk: {
-            var path: [std.os.PATH_MAX]u8 = undefined;
+            var path: [std.posix.PATH_MAX]u8 = undefined;
             var static_alloc = std.heap.FixedBufferAllocator.init(&path);
             break :blk try fs.path.join(static_alloc.allocator(), &.{ parent, entry.name });
         };

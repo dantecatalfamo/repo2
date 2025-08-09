@@ -7,13 +7,13 @@ function repo {
             repo-reload
             ;;
         *)
-            repo-zig $@
+            repo2 $@
             ;;
     esac
 }
 
 function repo-cd {
-    output="$(repo-zig $@)"
+    output="$(repo2 $@)"
     ret=$?
 
     if [ $ret -eq 0 ]; then
@@ -24,7 +24,7 @@ function repo-cd {
 }
 
 function repo-reload {
-    eval "$(repo-zig shell)"
+    eval "$(repo2 shell)"
 }
 
 function _repo_completions {

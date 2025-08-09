@@ -14,7 +14,7 @@ pub fn build(allocator: mem.Allocator, project_type: identify.ProjectType, optim
                 .debug => "-Doptimize=Debug",
                 .release => "-Doptimize=ReleaseSafe",
             };
-            var child = std.ChildProcess.init(&.{ "zig", "build", optimize_arg }, allocator);
+            var child = std.process.Child.init(&.{ "zig", "build", optimize_arg }, allocator);
             const exit = try child.spawnAndWait();
             if (exit.Exited != 0) {
                 return error.BuildFail;
@@ -25,7 +25,7 @@ pub fn build(allocator: mem.Allocator, project_type: identify.ProjectType, optim
                 .debug => &[_][]const u8{ "cargo", "build" },
                 .release => &[_][]const u8{ "cargo", "build", "-r" },
             };
-            var child = std.ChildProcess.init(args, allocator);
+            var child = std.process.Child.init(args, allocator);
             const exit = try child.spawnAndWait();
             if (exit.Exited != 0) {
                 return error.BuildFailed;
@@ -37,7 +37,7 @@ pub fn build(allocator: mem.Allocator, project_type: identify.ProjectType, optim
                 const n = try std.Thread.getCpuCount();
                 break :blk try std.fmt.bufPrint(&buf, "{d}", .{ n });
             };
-            var child = std.ChildProcess.init(&.{ "make", "-j", ncpu }, allocator);
+            var child = std.process.Child.init(&.{ "make", "-j", ncpu }, allocator);
             const exit = try child.spawnAndWait();
             if (exit.Exited != 0) {
                 return error.BuildFailed;

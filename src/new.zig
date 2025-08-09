@@ -16,7 +16,7 @@ pub fn newRepo(allocator: mem.Allocator, src_root: []const u8, repo_type: RepoTy
     try fs.cwd().makePath(repo_path);
     try process.changeCurDir(repo_path);
 
-    var child_git = std.ChildProcess.init(&.{ "git", "init" }, allocator);
+    var child_git = std.process.Child.init(&.{ "git", "init" }, allocator);
     child_git.stdout_behavior = .Ignore;
 
     const term_git = try child_git.spawnAndWait();
@@ -32,7 +32,7 @@ pub fn newRepo(allocator: mem.Allocator, src_root: []const u8, repo_type: RepoTy
             const module_name = try fs.path.join(allocator, &.{ defaults.host, defaults.user, repo_name });
             defer allocator.free(module_name);
 
-            var child_proc = std.ChildProcess.init(&.{ "go", "mod", "init", module_name }, allocator);
+            var child_proc = std.process.Child.init(&.{ "go", "mod", "init", module_name }, allocator);
             const term_proc = try child_proc.spawnAndWait();
             if (term_proc.Exited != 0) {
                 return error.NewRepoChildProcess;
@@ -42,21 +42,21 @@ pub fn newRepo(allocator: mem.Allocator, src_root: []const u8, repo_type: RepoTy
             // FIXME There should be a way to redirect a child
             // process' stdout to stderr in zig without resorting to a
             // shell process, but I don't know what it is right now
-            var child_proc = std.ChildProcess.init(&.{ "sh", "-c", "rails new . 1>&2" }, allocator);
+            var child_proc = std.process.Child.init(&.{ "sh", "-c", "rails new . 1>&2" }, allocator);
             const term_proc = try child_proc.spawnAndWait();
             if (term_proc.Exited != 0) {
                 return error.NewRepoChildProcess;
             }
         },
         .zig_exe => {
-            var child_proc = std.ChildProcess.init(&.{ "zig", "init-exe" }, allocator);
+            var child_proc = std.process.Child.init(&.{ "zig", "init-exe" }, allocator);
             const term_proc = try child_proc.spawnAndWait();
             if (term_proc.Exited != 0) {
                 return error.NewRepoChildProcess;
             }
         },
         .zig_lib => {
-            var child_proc = std.ChildProcess.init(&.{ "zig", "init-lib" }, allocator);
+            var child_proc = std.process.Child.init(&.{ "zig", "init-lib" }, allocator);
             const term_proc = try child_proc.spawnAndWait();
             if (term_proc.Exited != 0) {
                 return error.NewRepoChildProcess;

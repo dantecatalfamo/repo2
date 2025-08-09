@@ -32,7 +32,7 @@ pub fn cloneUrl(allocator: mem.Allocator, src_root: []const u8, url: []const u8)
 
     try fs.cwd().makePath(repo_paent_path);
 
-    var git_clone = std.ChildProcess.init(&.{ "git", "-C", repo_paent_path, "clone", "--recursive", origin.full_path }, allocator);
+    var git_clone = std.process.Child.init(&.{ "git", "-C", repo_paent_path, "clone", "--recursive", origin.full_path }, allocator);
     const term = try git_clone.spawnAndWait();
     if (term.Exited != 0) {
         return error.CloneFailed;
@@ -79,7 +79,8 @@ pub fn parseHttpUrl(url: []const u8) !Origin {
     const uri = try std.Uri.parse(url);
 
     const host = uri.host orelse return error.MissingHost;
-    var path_iter = mem.split(u8, uri.path, "/");
+
+    var path_iter = mem.splitScalar(u8, uri.path.raw, '/');
     _ = path_iter.next();
     const user = path_iter.next() orelse return error.UrlTooShort;
     const repo = blk: {
@@ -96,14 +97,14 @@ pub fn parseHttpUrl(url: []const u8) !Origin {
 
     return Origin{
         .full_path = url,
-        .host = host,
+        .host = host.raw,
         .user = user,
         .repo = repo,
         .transport = transport,
         .port = port,
         .branch = null,
-        .auth_user = auth_user,
-        .auth_pass = auth_pass,
+        .auth_user = if (auth_user) |valid_user| valid_user.raw else null,
+        .auth_pass = if (auth_pass) |valid_path| valid_path.raw else null,
     };
 }
 

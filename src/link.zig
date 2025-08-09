@@ -14,7 +14,7 @@ pub fn link(allocator: mem.Allocator, project_type: identify.ProjectType, messag
 
     switch (project_type) {
         .zig => {
-            var curr_path_buffer: [fs.MAX_PATH_BYTES]u8 = undefined;
+            var curr_path_buffer: [fs.max_path_bytes]u8 = undefined;
             const curr_path = try std.fs.cwd().realpath(".", &curr_path_buffer);
             const zig_bin = try fs.path.join(allocator, &.{ "zig-out", "bin" });
             defer allocator.free(zig_bin);
@@ -26,10 +26,10 @@ pub fn link(allocator: mem.Allocator, project_type: identify.ProjectType, messag
                 const new_path = try fs.path.join(allocator, &.{ defaults.bin, entry.name });
                 defer allocator.free(new_path);
                 std.debug.print("{s}: ", .{entry.name});
-                std.os.symlink(old_path, new_path) catch |err| switch (err) {
+                std.posix.symlink(old_path, new_path) catch |err| switch (err) {
                     error.PathAlreadyExists => {
-                        var link_buffer: [fs.MAX_PATH_BYTES]u8 = undefined;
-                        const existing_link = try std.os.readlink(new_path, &link_buffer);
+                        var link_buffer: [fs.max_path_bytes]u8 = undefined;
+                        const existing_link = try std.posix.readlink(new_path, &link_buffer);
                         if (mem.eql(u8, old_path, existing_link)) {
                             try message_writer.print("already linked\n", .{});
                         } else {
